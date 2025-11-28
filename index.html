@@ -236,7 +236,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
     }
     
     function getDeviceTries() {
-        var key = "ak_trial";
+        var key = "ak_trial_vm";
         try {
             var t = JSON.parse(localStorage.getItem(key));
             if (t && t.startDate) return t;
@@ -245,7 +245,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
     }
     
     function setDeviceTries(t) {
-        localStorage.setItem("ak_trial", JSON.stringify(t));
+        localStorage.setItem("ak_trial_vm", JSON.stringify(t));
     }
     
     function getDaysDiff(startDate) {
