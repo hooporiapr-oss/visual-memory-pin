@@ -159,7 +159,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
     var PK = "ak_pins";           // Shared PIN storage
     var UK = "ak_users";          // Shared user names
     var SK = "vmen2_stats_";      // Game-specific stats
-    var DK = "vmen2_device";      // Device ID for trials
+    var DK = "ak_dev";      // Device ID for trials
     var MAX_DAILY = 3;
     var MAX_DAYS = 3;
     
@@ -236,7 +236,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
     }
     
     function getDeviceTries() {
-        var key = DK + "_tries";
+        var key = "ak_trial";
         try {
             var t = JSON.parse(localStorage.getItem(key));
             if (t && t.startDate) return t;
@@ -245,7 +245,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
     }
     
     function setDeviceTries(t) {
-        localStorage.setItem(DK + "_tries", JSON.stringify(t));
+        localStorage.setItem("ak_trial", JSON.stringify(t));
     }
     
     function getDaysDiff(startDate) {
