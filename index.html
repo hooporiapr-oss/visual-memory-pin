@@ -35,7 +35,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
 .msg.ok{color:#4ecdc4}
 .toggle{text-align:center;margin-top:10px;color:#b8b8cc;font-size:0.75em}
 .toggle span{color:#ffd700;cursor:pointer;text-decoration:underline}
-.btn{width:100%;background:linear-gradient(135deg,#ffd700,#ff8c00);color:#1a1034;border:none;padding:10px;border-radius:15px;font-size:0.85em;font-weight:bold;cursor:pointer;margin-top:5px}
+.btn{width:100%;background:linear-gradient(135deg,#ffd700,#ff8c00);color:#1a1034;border:none;padding:10px;border-radius:15px;font-size:0.85em;font-weight:bold;cursor:pointer;margin-top:5px;font-family:Georgia,serif}
 .btn:active{transform:scale(0.98)}
 .btn2{background:linear-gradient(135deg,#8a2be2,#4b0082);color:#fff}
 .welcome{background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);border-radius:8px;padding:10px;margin-bottom:10px;text-align:center}
@@ -73,6 +73,9 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
 .res-detail span{color:#b8b8cc;font-size:0.7em}
 .record{background:rgba(255,215,0,0.2);border:1px solid #ffd700;border-radius:5px;padding:6px;margin:8px 0;color:#ffd700;font-weight:bold;font-size:0.85em}
 .rating{color:#d4af37;margin-bottom:10px;font-size:0.85em}
+.name-input{width:100%;padding:10px;background:rgba(255,255,255,0.1);border:2px solid rgba(212,175,55,0.5);border-radius:8px;color:#e8e8f0;font-size:1em;font-family:Georgia,serif;margin-bottom:10px;text-align:center}
+.name-input:focus{outline:none;border-color:#ffd700}
+.name-input::placeholder{color:#888}
 </style>
 </head>
 <body>
@@ -80,6 +83,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
 <div class="title">Visual Memory</div>
 <div class="subtitle">Brain Training</div>
 
+<!-- Login Box -->
 <div class="box" id="loginBox">
 <div class="pin-title">Enter PIN</div>
 <div class="pin-sub">Enter your 4-digit PIN</div>
@@ -89,6 +93,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
 <div class="toggle">No account? <span id="toCreate">Create PIN</span></div>
 </div>
 
+<!-- Create PIN Box -->
 <div class="box hidden" id="createBox">
 <div class="pin-title" id="createTitle">Create PIN</div>
 <div class="pin-sub" id="createSub">Choose a 4-digit PIN</div>
@@ -98,13 +103,24 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
 <div class="toggle">Have a PIN? <span id="toLogin">Login</span></div>
 </div>
 
+<!-- Name Setup Box -->
+<div class="box hidden" id="nameBox">
+<div class="pin-title">Set Display Name</div>
+<div class="pin-sub">Choose a name for the leaderboard</div>
+<input type="text" class="name-input" id="nameInput" placeholder="Enter your name" maxlength="15">
+<button class="btn" id="saveNameBtn">Save Name</button>
+<div class="msg" id="nameMsg"></div>
+</div>
+
+<!-- Dashboard -->
 <div class="box hidden" id="dashBox">
-<div class="welcome"><h3>Welcome!</h3><p>Remember which tiles light up</p></div>
+<div class="welcome"><h3 id="welcomeName">Welcome!</h3><p>Remember which tiles light up</p></div>
 <div class="stats"><div class="stat"><b id="dGames">0</b><span>Games</span></div><div class="stat"><b id="dBest">--</b><span>Best Level</span></div><div class="stat"><b id="dAvg">--</b><span>Average</span></div><div class="stat"><b id="dRate">--</b><span>Rating</span></div></div>
 <button class="btn" id="startBtn">Start Game</button>
 <button class="btn btn2" id="logoutBtn">Logout</button>
 </div>
 
+<!-- Game Box -->
 <div class="box hidden" id="gameBox">
 <div class="game-info"><div class="game-stat"><b id="gLevel">1</b><span>Level</span></div><div class="game-stat"><b id="gTiles">3</b><span>Tiles</span></div><div class="game-stat"><b id="gScore">0</b><span>Score</span></div></div>
 <div class="lives" id="livesContainer"><span class="life">❤️</span><span class="life">❤️</span><span class="life">❤️</span></div>
@@ -113,6 +129,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
 <button class="btn btn2" id="quitBtn">Quit</button>
 </div>
 
+<!-- Results -->
 <div class="res-bg hidden" id="resBg">
 <div class="res">
 <h2>Game Over!</h2>
@@ -126,6 +143,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
 </div>
 </div>
 
+<!-- Limit Popup -->
 <div class="popup-bg hidden" id="limitPopup">
 <div class="popup">
 <h3 id="limitTitle">Daily limit reached</h3>
@@ -137,13 +155,16 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
 
 <script>
 (function(){
-    var PK = "vmen1_pin";
-    var SK = "vmen1_stats_";
-    var DK = "vmen1_device";
+    // Storage keys
+    var PK = "ak_pins";           // Shared PIN storage
+    var UK = "ak_users";          // Shared user names
+    var SK = "vmen2_stats_";      // Game-specific stats
+    var DK = "vmen2_device";      // Device ID for trials
     var MAX_DAILY = 3;
     var MAX_DAYS = 3;
     
     var currentPin = "";
+    var currentUser = null;
     var level = 1;
     var score = 0;
     var lives = 3;
@@ -156,6 +177,50 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
     
     function $(id) { return document.getElementById(id); }
     
+    // ===== SHARED PIN SYSTEM =====
+    function hash(p) {
+        var h = 0;
+        var s = p + "akashic";
+        for (var i = 0; i < s.length; i++) {
+            h = ((h << 5) - h) + s.charCodeAt(i);
+            h = h & h;
+        }
+        return h.toString(36);
+    }
+    
+    function getPins() {
+        try { return JSON.parse(localStorage.getItem(PK)) || {}; }
+        catch (e) { return {}; }
+    }
+    
+    function savePins(p) { localStorage.setItem(PK, JSON.stringify(p)); }
+    
+    function checkPin(p) { return !!getPins()[hash(p)]; }
+    
+    function savePin(p) {
+        var pins = getPins();
+        pins[hash(p)] = { created: Date.now() };
+        savePins(pins);
+    }
+    
+    function getUsers() {
+        try { return JSON.parse(localStorage.getItem(UK)) || {}; }
+        catch (e) { return {}; }
+    }
+    
+    function saveUsers(u) { localStorage.setItem(UK, JSON.stringify(u)); }
+    
+    function getUser(pinHash) {
+        return getUsers()[pinHash] || null;
+    }
+    
+    function saveUser(pinHash, userData) {
+        var users = getUsers();
+        users[pinHash] = userData;
+        saveUsers(users);
+    }
+    
+    // ===== DEVICE TRIAL SYSTEM =====
     function getDeviceId() {
         var id = localStorage.getItem(DK);
         if (!id) {
@@ -224,31 +289,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
         showBanner();
     }
     
-    function hash(p) {
-        var h = 0;
-        var s = p + "vmen1";
-        for (var i = 0; i < s.length; i++) {
-            h = ((h << 5) - h) + s.charCodeAt(i);
-            h = h & h;
-        }
-        return h.toString(36);
-    }
-    
-    function getPins() {
-        try { return JSON.parse(localStorage.getItem(PK)) || {}; }
-        catch (e) { return {}; }
-    }
-    
-    function savePins(p) { localStorage.setItem(PK, JSON.stringify(p)); }
-    
-    function checkPin(p) { return !!getPins()[hash(p)]; }
-    
-    function savePin(p) {
-        var pins = getPins();
-        pins[hash(p)] = { created: Date.now() };
-        savePins(pins);
-    }
-    
+    // ===== GAME STATS =====
     function getStats() {
         try {
             return JSON.parse(localStorage.getItem(SK + hash(currentPin))) || { games: 0, bestLevel: 0, totalLevel: 0 };
@@ -283,7 +324,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
     }
     
     function show(id) {
-        ["loginBox", "createBox", "dashBox", "gameBox"].forEach(function(x) {
+        ["loginBox", "createBox", "nameBox", "dashBox", "gameBox"].forEach(function(x) {
             $(x).classList.add("hidden");
         });
         $(id).classList.remove("hidden");
@@ -314,6 +355,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
         return "Learning";
     }
     
+    // ===== PIN UI =====
     var loginPin = "";
     var createPin = "";
     var confirmPin = "";
@@ -359,7 +401,12 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
                     setTimeout(function() {
                         if (checkPin(loginPin)) {
                             currentPin = loginPin;
-                            loadDash();
+                            currentUser = getUser(hash(currentPin));
+                            if (currentUser && currentUser.name) {
+                                loadDash();
+                            } else {
+                                show("nameBox");
+                            }
                         } else {
                             setMsg("loginMsg", "Incorrect PIN", true);
                             loginPin = "";
@@ -396,7 +443,9 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
                                 savePin(createPin);
                                 currentPin = createPin;
                                 setMsg("createMsg", "PIN created!", false);
-                                setTimeout(loadDash, 500);
+                                setTimeout(function() {
+                                    show("nameBox");
+                                }, 500);
                             } else {
                                 setMsg("createMsg", "PINs don't match", true);
                                 createPin = "";
@@ -421,6 +470,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
     
     function loadDash() {
         var s = getStats();
+        $("welcomeName").textContent = "Welcome, " + (currentUser ? currentUser.name : "Player") + "!";
         $("dGames").textContent = s.games || 0;
         $("dBest").textContent = s.bestLevel || "--";
         $("dAvg").textContent = s.games > 0 ? Math.round(s.totalLevel / s.games) : "--";
@@ -430,11 +480,8 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
         if (!canPlay().ok) showLimit();
     }
     
+    // ===== GAME LOGIC =====
     function getLevelParams(lvl) {
-        // Level 1-3: 3x3 grid, 3-5 tiles
-        // Level 4-6: 4x4 grid, 4-6 tiles
-        // Level 7-9: 5x5 grid, 5-7 tiles
-        // Level 10+: 5x5 grid, 6+ tiles
         if (lvl <= 3) {
             return { grid: 3, tiles: 2 + lvl };
         } else if (lvl <= 6) {
@@ -467,7 +514,6 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
             grid.appendChild(cell);
         }
         
-        // Select random tiles to light up
         litTiles = [];
         var available = [];
         for (var j = 0; j < totalCells; j++) available.push(j);
@@ -493,7 +539,6 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
             cells[idx].classList.add("lit");
         });
         
-        // Show time based on number of tiles
         var showTime = 1000 + (tilesToShow * 200);
         
         setTimeout(function() {
@@ -513,11 +558,9 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
         selectedTiles.push(idx);
         
         if (litTiles.indexOf(idx) !== -1) {
-            // Correct tile
             cells[idx].classList.add("correct");
             
             if (selectedTiles.length === litTiles.length) {
-                // All tiles found!
                 canSelect = false;
                 score += level * 10;
                 rounds++;
@@ -530,13 +573,11 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
                 }, 1000);
             }
         } else {
-            // Wrong tile
             cells[idx].classList.add("wrong");
             canSelect = false;
             lives--;
             updateLives();
             
-            // Show correct tiles
             litTiles.forEach(function(i) {
                 if (selectedTiles.indexOf(i) === -1) {
                     cells[i].classList.add("lit");
@@ -616,7 +657,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
         }
     }
     
-    // Initialize
+    // ===== INIT =====
     document.addEventListener("DOMContentLoaded", function() {
         getDeviceId();
         setupLogin();
@@ -640,6 +681,22 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
             show("loginBox");
         };
         
+        $("saveNameBtn").onclick = function() {
+            var name = $("nameInput").value.trim();
+            if (name.length < 2) {
+                setMsg("nameMsg", "Name too short (min 2 chars)", true);
+                return;
+            }
+            if (name.length > 15) {
+                setMsg("nameMsg", "Name too long (max 15 chars)", true);
+                return;
+            }
+            
+            currentUser = { name: name, created: Date.now() };
+            saveUser(hash(currentPin), currentUser);
+            loadDash();
+        };
+        
         $("startBtn").onclick = function() {
             if (!canPlay().ok) {
                 showLimit();
@@ -651,6 +708,7 @@ body{font-family:Georgia,serif;background:linear-gradient(135deg,#0a0e27,#1a1034
         $("logoutBtn").onclick = function() {
             loginPin = "";
             currentPin = "";
+            currentUser = null;
             setDots("d", 0);
             show("loginBox");
         };
